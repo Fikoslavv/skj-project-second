@@ -48,12 +48,12 @@ public class ConsolePrinter
 
     public static synchronized void printCriticalErrLn(String msg)
     {
-        if (!ConsolePrinter.releasePrintMode) ConsolePrinter.printOutputLn("[\033[38;5;196mCERR\033[0m] " + msg, System.err);
+        if (ConsolePrinter.quietPrintMode) ConsolePrinter.printOutputLn("[\033[38;5;196mCERR\033[0m] " + msg, System.err);
     }
 
     public static synchronized void printCriticalErrLn(String msg, Throwable e)
     {
-        if (!ConsolePrinter.quietPrintMode) return;
+        if (ConsolePrinter.quietPrintMode) return;
         System.err.println("[\033[38;5;196mCERR\033[0m] " + msg);
         e.printStackTrace();
     }
