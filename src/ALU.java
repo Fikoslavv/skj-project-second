@@ -1,6 +1,8 @@
-public class ALU
+public class ALU implements IConsolePrinter
 {
     protected static java.util.Map<String, java.util.function.BiFunction<Long, Long, Long>> operationsMap = null;
+
+    protected StatisticsReporter statisticsReporter = null;
 
     public ALU()
     {
@@ -16,14 +18,38 @@ public class ALU
         }
     }
 
+    public ALU(StatisticsReporter statisticsReporter)
+    {
+        this();
+
+        this.statisticsReporter = statisticsReporter;
+    }
+
     public String execute(String command)
     {
-        String[] bits = command.split(" ");
+        this.printInfoLn("Executing command[" + command + "] !");
 
+        String output = "ERROR";
+        
         try
         {
-            return ALU.operationsMap.get(bits[0]).apply(Long.parseLong(bits[1]), Long.parseLong(bits[2])).toString();
+            String[] bits = command.split(" ");
+
+            output = ALU.operationsMap.get(bits[0]).apply(Long.parseLong(bits[1]), Long.parseLong(bits[2])).toString();
         }
-        catch (Exception e) { return "ERROR"; }
+        catch (java.util.regex.PatternSyntaxException e) { this.printCriticalErrLn("Cannot split command[" + command + "] because the split regex is invalid !", e); }
+        catch (Exception e) { }
+
+        this.printInfoLn("The result of command[" + command + "] is [" + output + "] !");
+
+        if (this.statisticsReporter != null) this.statisticsReporter.report("ALU_COMMAND_" + command + ' ' + output);
+
+        return output;
+    }
+
+    @Override
+    public String getConsolePrinterPrefix()
+    {
+        return "[\033[38;5;52mALU\033[0m]";
     }
 }

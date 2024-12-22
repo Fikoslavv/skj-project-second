@@ -24,26 +24,38 @@ public class App implements IConsolePrinter
 
     public App(int port)
     {
-        super();
+        final StatisticsReporter reporter = new StatisticsReporter();
 
-        try (NetBridge bridge = new NetBridge(port))
+        try (NetBridge bridge = new NetBridge(port, reporter))
         {
-            ALU alu = new ALU();
-            Thread currentThread = Thread.currentThread();
+            final ALU alu = new ALU(reporter);
+            final Thread currentThread = Thread.currentThread();
 
             while (!currentThread.isInterrupted())
             {
-                NetBridge.ClientHandler clientHandler = bridge.nextUnhandledConnection();
+                final NetBridge.ClientHandler clientHandler = bridge.nextUnhandledConnection();
 
                 if (clientHandler != null) clientHandler.setOnMessageReceived((command, handler) -> handler.message = alu.execute(command));
                 else try { Thread.sleep(0, 50); } catch (Exception e) { }
+
+                if (System.currentTimeMillis() - reporter.timeOfLastCheck > 10000)
+                {
+                    final StringBuilder consoleOutputBuilder = new StringBuilder();
+
+                    consoleOutputBuilder.append("[\033[38;5;99mStatisticsReport\033[0m]\nStats since launch ↓");
+                    reporter.getStatsSinceLaunch().stream().forEachOrdered(e -> consoleOutputBuilder.append('\n').append(" · ").append(e.getKey()).append(" : ").append(e.getValue()));
+                    consoleOutputBuilder.append('\n').append("Stats gathered throughout last 10 seconds ↓");
+                    reporter.getStatsSinceLastCheck().stream().forEachOrdered(e -> consoleOutputBuilder.append('\n').append(" · ").append(e.getKey()).append(" : ").append(e.getValue()));
+
+                    this.printInfoLn(consoleOutputBuilder.toString());
+                }
             }
         }
         catch (Exception e) { this.printErrLn("Sth went wrong !!!", e); }
     }
 
     @Override
-    public String getProgramPrinterPrefix()
+    public String getConsolePrinterPrefix()
     {
         return "[\033[38;5;154mApp\033[0m]";
     }

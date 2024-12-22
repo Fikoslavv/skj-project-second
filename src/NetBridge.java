@@ -86,7 +86,7 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
         }
 
         @Override
-        public String getProgramPrinterPrefix()
+        public String getConsolePrinterPrefix()
         {
             return "[\033[38;5;10mClientHandler\033[0m]";
         }
@@ -98,6 +98,8 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
 
     protected java.util.Queue<ClientHandler> unhandledClients = new java.util.LinkedList<>();
 
+    protected StatisticsReporter statisticsReporter;
+
     public NetBridge(int localPort)
     {
         super();
@@ -105,6 +107,16 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
         this.init(localPort);
 
         this.isInitiated = true;
+    }
+
+    public NetBridge(int localPort, StatisticsReporter statisticsReporter)
+    {
+        super();
+
+        this.init(localPort);
+
+        this.isInitiated = true;
+        this.statisticsReporter = statisticsReporter;
     }
 
     protected synchronized void init(int localPort)
@@ -171,6 +183,7 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
                             ClientHandler handler = new ClientHandler(clientSocket);
 
                             this.printDebugInfoLn("New client[" + clientSocket.getInetAddress().getHostAddress().toString() + ':' + clientSocket.getPort() + "] connected !");
+                            if (this.statisticsReporter != null) this.statisticsReporter.report(StatisticsReporter.STATISTIC_NEW_CLIENT_CONNECTIONS);
 
                             synchronized (this)
                             {
@@ -215,7 +228,7 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
     }
 
     @Override
-    public String getProgramPrinterPrefix()
+    public String getConsolePrinterPrefix()
     {
         return "[\033[38;5;159mNetBridge\033[0m]";
     }

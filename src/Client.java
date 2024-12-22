@@ -125,10 +125,14 @@ public class Client implements IConsolePrinter
         {
             this.printErrLn("Failed to connect to CCS[" + remoteAddress.getHostAddress() + ':' + remotePort + "] !", e);
         }
+        finally
+        {
+            this.printDebugInfoLn("Disconnected from CCS[" + remoteAddress.getHostAddress() + ':' + remotePort + "] !");
+        }
     }
 
     @Override
-    public String getProgramPrinterPrefix()
+    public String getConsolePrinterPrefix()
     {
         return "[\033[38;5;154mClient\033[0m]";
     }

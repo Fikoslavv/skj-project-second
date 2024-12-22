@@ -25,7 +25,7 @@
             "request": "launch",
             "mainClass": "Client",
             "projectName": "skj-project-second_42aac3a0",
-            "args": "127.0.0.1:2137 \"SUB $RANDOM $RANDOM\""
+            "args": "2137"
         }
     ]
 }
