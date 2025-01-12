@@ -1,5 +1,7 @@
 public class App implements IConsolePrinter
 {
+    private final static boolean VERBOSE_PRINT_MODE = false;
+
     public static void main(String[] args)
     {
         final java.util.Scanner hiScanner = new java.util.Scanner(System.in);
@@ -15,7 +17,7 @@ public class App implements IConsolePrinter
             port = hiScanner.nextInt();
         }
 
-        ConsolePrinter.setVerbosePrintMode(true);
+        ConsolePrinter.setVerbosePrintMode(App.VERBOSE_PRINT_MODE);
 
         new App(port);
 

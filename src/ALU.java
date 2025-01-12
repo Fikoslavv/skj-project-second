@@ -1,6 +1,6 @@
 public class ALU implements IConsolePrinter
 {
-    protected static java.util.Map<String, java.util.function.BiFunction<Long, Long, Long>> operationsMap = null;
+    protected static java.util.Map<String, java.util.function.BiFunction<Integer, Integer, Integer>> operationsMap = null;
 
     protected StatisticsReporter statisticsReporter = null;
 
@@ -27,7 +27,7 @@ public class ALU implements IConsolePrinter
 
     public String execute(String command)
     {
-        this.printInfoLn("Executing command[" + command + "] !");
+        this.printDebugInfoLn("Executing command[" + command + "] !");
 
         String output = "ERROR";
         
@@ -35,14 +35,18 @@ public class ALU implements IConsolePrinter
         {
             String[] bits = command.split(" ");
 
-            output = ALU.operationsMap.get(bits[0]).apply(Long.parseLong(bits[1]), Long.parseLong(bits[2])).toString();
+            output = ALU.operationsMap.get(bits[0]).apply(Integer.parseInt(bits[1]), Integer.parseInt(bits[2])).toString();
         }
         catch (java.util.regex.PatternSyntaxException e) { this.printCriticalErrLn("Cannot split command[" + command + "] because the split regex is invalid !", e); }
         catch (Exception e) { }
 
         this.printInfoLn("The result of command[" + command + "] is [" + output + "] !");
 
-        if (this.statisticsReporter != null) this.statisticsReporter.report("ALU_COMMAND_" + command + ' ' + output);
+        if (this.statisticsReporter != null)
+        {
+            this.statisticsReporter.report("ALU_COMMAND_" + command + ' ' + output);
+            if (output.equals("ERROR")) this.statisticsReporter.report("ALU_COMMAND_ERRORS " + ' ' + output);
+        }
 
         return output;
     }

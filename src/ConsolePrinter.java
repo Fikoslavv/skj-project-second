@@ -41,14 +41,14 @@ public class ConsolePrinter
 
     public static synchronized void printErrLn(String msg, Throwable e)
     {
-        if (ConsolePrinter.quietPrintMode) return;
+        if (ConsolePrinter.releasePrintMode || ConsolePrinter.quietPrintMode) return;
         System.err.println("[\033[38;5;160mERR\033[0m] " + msg);
         e.printStackTrace();
     }
 
     public static synchronized void printCriticalErrLn(String msg)
     {
-        if (ConsolePrinter.quietPrintMode) ConsolePrinter.printOutputLn("[\033[38;5;196mCERR\033[0m] " + msg, System.err);
+        ConsolePrinter.printOutputLn("[\033[38;5;196mCERR\033[0m] " + msg, System.err);
     }
 
     public static synchronized void printCriticalErrLn(String msg, Throwable e)

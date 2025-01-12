@@ -49,16 +49,16 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
 
                     if (message != null)
                     {
+                        this.printDebugInfoLn("Received message[" + this.message + "] from host[" + this.socket.getInetAddress().getHostAddress() + ':' + this.socket.getPort() + "] !");
+
                         synchronized (this)
                         {
-                            this.printDebugInfoLn("Received message[" + this.message + "] from host[" + this.socket.getInetAddress().getHostAddress() + ':' + this.socket.getPort() + "] !");
-
                             if (this.onMessageReceived == null) try { this.wait(500); } catch (Exception e) { this.onMessageReceived = (l, h) -> { }; }
 
                             this.onMessageReceived.accept(this.message, this);
+                            
+                            writer.append(this.message).append('\n').flush();
                         }
-
-                        writer.append(this.message).append('\n').flush();
 
                         this.printDebugInfoLn("Sent message[" + this.message + "] to host[" + recipientAddress + "] !");
                     }
@@ -94,7 +94,8 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
 
     private final boolean isInitiated;
 
-    protected java.util.concurrent.ExecutorService threadExecutor = java.util.concurrent.Executors.newCachedThreadPool();
+    protected java.util.concurrent.ExecutorService serviceExecutor = java.util.concurrent.Executors.newCachedThreadPool();
+    protected java.util.concurrent.ExecutorService clientExecutor = java.util.concurrent.Executors.newCachedThreadPool();
 
     protected java.util.Queue<ClientHandler> unhandledClients = new java.util.LinkedList<>();
 
@@ -111,11 +112,8 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
 
     public NetBridge(int localPort, StatisticsReporter statisticsReporter)
     {
-        super();
+        this(localPort);
 
-        this.init(localPort);
-
-        this.isInitiated = true;
         this.statisticsReporter = statisticsReporter;
     }
 
@@ -123,13 +121,13 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
     {
         if (this.isInitiated) throw new InstantiationError("Cannot initiate " + this.toString() + " because it has already been initiated !");
 
-        this.threadExecutor.submit
+        this.serviceExecutor.submit
         (
             //#region discovery service
             () ->
             {
                 final Thread currentThread = Thread.currentThread();
-                final byte[] buff = new byte[1500];
+                final byte[] buff = new byte[12];
                 final byte[] ansBuff = NetBridge.DISCOVERY_SERVICE_FOUND_MSG.getBytes();
 
                 try (java.net.DatagramSocket socket = new java.net.DatagramSocket(localPort))
@@ -146,7 +144,7 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
                         String message = new String(packet.getData()).trim();
                         this.printDebugInfoLn("Received UDP packet[" + message + "] from host[" + packet.getAddress().getHostAddress() + ':' + packet.getPort() + "] !");
 
-                        if (message.equals(NetBridge.DISCOVERY_SERVICE_DISCOVER_MSG))
+                        if (message.contains(NetBridge.DISCOVERY_SERVICE_DISCOVER_MSG))
                         {
                             socket.send(new java.net.DatagramPacket(ansBuff, ansBuff.length, packet.getAddress(), packet.getPort()));
                             this.printDebugInfoLn("Send UDP packet [" + NetBridge.DISCOVERY_SERVICE_FOUND_MSG + "] to host[" + packet.getAddress().getHostAddress() + ':' + packet.getPort() + "] !");
@@ -163,7 +161,7 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
             //#endregion discovery service
         );
 
-        this.threadExecutor.submit
+        this.serviceExecutor.submit
         (
             () ->
             {
@@ -188,7 +186,7 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
                             synchronized (this)
                             {
                                 this.unhandledClients.add(handler);
-                                this.threadExecutor.submit(handler);
+                                this.clientExecutor.submit(handler);
                             }
                         }
                         catch (java.net.SocketTimeoutException e) { }
@@ -222,8 +220,11 @@ public class NetBridge implements java.io.Closeable, IConsolePrinter
 
         synchronized (this)
         {
-            this.threadExecutor.shutdownNow();
-            try { this.threadExecutor.awaitTermination(0, null); } catch (Exception e) { }
+            this.serviceExecutor.shutdownNow();
+            try { this.serviceExecutor.awaitTermination(0, null); } catch (Exception e) { }
+
+            this.clientExecutor.shutdownNow();
+            try { this.clientExecutor.awaitTermination(0, null); } catch (Exception e) { }
         }
     }
 

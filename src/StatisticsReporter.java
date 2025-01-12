@@ -3,10 +3,10 @@ public class StatisticsReporter
     public static final String STATISTIC_NEW_CLIENT_CONNECTIONS = "NEW_CLIENT_CONNECTIONS";
     public static final String STATISTIC_ALU_OPERATIONS_COUNT = "ALU_OPERATIONS_COUNT";
     public static final String STATISTIC_ALU_COMMANDS_SUM = "SUM_OF_ALU_COMMANDS";
-    protected static final String[] STATISTICS_DEFAULT_KEYS = { "ALU_COMMAND_ADD", "ALU_COMMAND_SUB", "ALU_COMMAND_MUL", "ALU_COMMAND_DIV", StatisticsReporter.STATISTIC_ALU_COMMANDS_SUM, StatisticsReporter.STATISTIC_ALU_OPERATIONS_COUNT, StatisticsReporter.STATISTIC_NEW_CLIENT_CONNECTIONS };
+    protected static final String[] STATISTICS_DEFAULT_KEYS = { "ALU_COMMAND_ERRORS", "ALU_COMMAND_ADD", "ALU_COMMAND_SUB", "ALU_COMMAND_MUL", "ALU_COMMAND_DIV", StatisticsReporter.STATISTIC_ALU_COMMANDS_SUM, StatisticsReporter.STATISTIC_ALU_OPERATIONS_COUNT, StatisticsReporter.STATISTIC_NEW_CLIENT_CONNECTIONS };
 
-    protected java.util.Map<String, Long> statsSinceLaunch = new java.util.concurrent.ConcurrentHashMap<>();
-    protected java.util.Map<String, Long> statsSinceLastCheck = new java.util.concurrent.ConcurrentHashMap<>();
+    protected java.util.Map<String, Long> statsSinceLaunch = new java.util.HashMap<>();
+    protected java.util.Map<String, Long> statsSinceLastCheck = new java.util.HashMap<>();
     protected long timeOfLastCheck;
 
     public StatisticsReporter()
@@ -16,18 +16,18 @@ public class StatisticsReporter
         this.timeOfLastCheck = System.currentTimeMillis();
     }
 
-    public /* synchronized */ void initMap(java.util.Map<String, Long> statsMap)
+    public synchronized void initMap(java.util.Map<String, Long> statsMap)
     {
         statsMap.clear();
         for (String stat : StatisticsReporter.STATISTICS_DEFAULT_KEYS) statsMap.put(stat, 0L);
     }
 
-    public /* synchronized */ java.util.List<java.util.Map.Entry<String, Long>> getStatsSinceLaunch()
+    public synchronized java.util.List<java.util.Map.Entry<String, Long>> getStatsSinceLaunch()
     {
         return this.statsSinceLaunch.entrySet().stream().collect(java.util.stream.Collectors.toList());
     }
 
-    public /* synchronized */ java.util.List<java.util.Map.Entry<String, Long>> getStatsSinceLastCheck()
+    public synchronized java.util.List<java.util.Map.Entry<String, Long>> getStatsSinceLastCheck()
     {
         java.util.List<java.util.Map.Entry<String, Long>> output = this.statsSinceLastCheck.entrySet().stream().collect(java.util.stream.Collectors.toList());
 
@@ -37,12 +37,12 @@ public class StatisticsReporter
         return output;
     }
 
-    public /* synchronized */ long getTimeOfLastCheck()
+    public synchronized long getTimeOfLastCheck()
     {
         return this.timeOfLastCheck;
     }
 
-    public /* synchronized */ void report(String value)
+    public synchronized void report(String value)
     {
         String[] words = value.split(" ");
 
